@@ -44,30 +44,33 @@ int main(int argc, char **argv)
     
     buf = (int *) malloc(SIZE);
     nints = SIZE/sizeof(int);
-    for (i=0; i<nints; i++) buf[i] = rank*100000 + i;
+    printf("%d, %d, %lu\n", nints, SIZE, sizeof(int));
+    for (i=0; i<nints; i++){
+//        printf("%d\n", rank+i);
+        buf[i] = rank + i;
+    }
 
     /* each process opens a separate file called filename.'myrank' */
     tmp = (char *) malloc(len+10);
     strcpy(tmp, filename);
     sprintf(filename, "%s.%d", tmp, rank);
 
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-           MPI_INFO_NULL, &fh);
+    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
     MPI_File_write(fh, buf, nints, MPI_INT, &status);
     MPI_File_close(&fh);
 
     /* reopen the file and read the data back */
 
-    for (i=0; i<nints; i++) buf[i] = 0;
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
-                  MPI_INFO_NULL, &fh);
+    for (i=0; i<nints; i++)
+        buf[i] = 0;
+    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
     MPI_File_read(fh, buf, nints, MPI_INT, &status);
     MPI_File_close(&fh);
 
     /* check if the data read is correct */
     for (i=0; i<nints; i++) 
-    if (buf[i] != (rank*100000 + i)) 
-        fprintf(stderr, "Process %d: error, read %d, should be %d\n", rank, buf[i], rank*100000+i);
+    if (buf[i] != (rank + i)) 
+        fprintf(stderr, "Process %d: error, read %d, should be %d\n", rank, buf[i], rank+i);
 
     if (!rank) fprintf(stderr, "Done\n");
 
